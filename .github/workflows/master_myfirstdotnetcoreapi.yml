@@ -1,34 +1,42 @@
-name: Build and deploy ASP.Net Core app
+name: Build and Deploy .NET API to Azure App Service
 
 on:
   push:
     branches:
-      - master
+      - master   # ⚠️ change to main if your repo uses main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # 1. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      # 2. Setup .NET
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      # 3. Restore dependencies
       - name: Restore
         run: dotnet restore
 
+      # 4. Build project
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
+      # 5. Publish project (IMPORTANT)
       - name: Publish
-        run: dotnet publish -c Release -o ./publish
+        run: dotnet publish --configuration Release --output ./publish
 
-      - name: Deploy to Azure
+      # 6. Deploy to Azure App Service
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'myfirstdotnetcoreapi'
+          app-name: 'myfirstdotnetcoreapi'   # ⚠️ your app name
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./publish
