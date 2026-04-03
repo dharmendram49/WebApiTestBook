@@ -50,7 +50,7 @@ builder.Host.UseSerilog();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || true)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -61,11 +61,11 @@ else
     app.UseExceptionHandler("/error"); // must create error end point
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
-    db.Database.Migrate();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
+//    db.Database.Migrate();
+//}
 
 app.UseMiddleware<RequestLoggingMiddleware>();   // 🔥 First
 app.UseMiddleware<ExceptionMiddleware>();        // 🔥 Second
