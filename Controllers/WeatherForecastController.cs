@@ -33,7 +33,7 @@ namespace WebApiTestBook.Controllers
         [HttpGet("logGlobalError")]
         public ActionResult LogGlobalError()
         {
-            _logger.LogInformation("LogGlobalError called user data {@user} {@user2}", new { id = 1, name = "John" }, new { id = 1, name = "John" });
+            _logger.LogInformation("LogGlobalError called user data {@user}", new { id = 1, name = "John" });
 
             var divider = 0;
             var ret = 100 / divider;
