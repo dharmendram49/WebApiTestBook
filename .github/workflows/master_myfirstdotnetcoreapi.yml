@@ -1,4 +1,4 @@
-name: Build and deploy ASP.Net Core app to Azure Web App - myfirstdotnetcoreapi
+name: Build and Deploy .NET API (QA → PROD using azure/login)
 
 on:
   push:
@@ -8,14 +8,15 @@ on:
 
 jobs:
 
-# 🔹 BUILD JOB (same as yours, slightly improved)
+# 🔹 1. BUILD
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
@@ -27,37 +28,44 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish -c Release -o ./publish   # ✅ simplified
+        run: dotnet publish -c Release -o ./publish
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet-app
+          name: app
           path: ./publish
 
 
-# 🔹 DEPLOY TO QA (AUTO)
+# 🔹 2. DEPLOY TO QA (AUTO)
   deploy-qa:
     runs-on: ubuntu-latest
     needs: build
-    environment: qa   # ✅ GitHub Environment (no approval)
+    environment: qa
 
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: dotnet-app
+          name: app
+
+      # 🔐 Azure Login (OIDC)
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F923CE1D661F4B5C8CB6856292E7D75C }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_99D4B8B10C7F456183101AFA9AA65576 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_322BF678FCA44E53959B7C5CF341F1C2 }}
 
       - name: Deploy to QA Slot
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'myfirstdotnetcoreapi'
-          slot-name: 'qa'   # 🔥 your QA slot
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}
+          slot-name: 'qa'   # 🔥 QA slot
           package: .
 
 
-# 🔹 DEPLOY TO PRODUCTION (MANUAL APPROVAL)
+# 🔹 3. DEPLOY TO PRODUCTION (MANUAL APPROVAL)
   deploy-prod:
     runs-on: ubuntu-latest
     needs: deploy-qa
@@ -67,11 +75,18 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: dotnet-app
+          name: app
+
+      # 🔐 Azure Login (OIDC)
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F923CE1D661F4B5C8CB6856292E7D75C }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_99D4B8B10C7F456183101AFA9AA65576 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_322BF678FCA44E53959B7C5CF341F1C2 }}
 
       - name: Deploy to Production
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'myfirstdotnetcoreapi'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
-          package: .
+          package: .   # 🔥 no slot-name for production
