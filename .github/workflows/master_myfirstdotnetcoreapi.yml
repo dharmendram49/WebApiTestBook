@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy ASP.Net Core app to Azure Web App - myfirstdotnetcoreapi
 
 on:
@@ -10,10 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
+
+# 🔹 BUILD JOB (same as yours, slightly improved)
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -23,43 +20,58 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Restore
+        run: dotnet restore
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
-      - name: Upload artifact for deployment job
+      - name: Publish
+        run: dotnet publish -c Release -o ./publish   # ✅ simplified
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: dotnet-app
+          path: ./publish
 
-  deploy:
+
+# 🔹 DEPLOY TO QA (AUTO)
+  deploy-qa:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+    environment: qa   # ✅ GitHub Environment (no approval)
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F923CE1D661F4B5C8CB6856292E7D75C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_99D4B8B10C7F456183101AFA9AA65576 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_322BF678FCA44E53959B7C5CF341F1C2 }}
+          name: dotnet-app
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      - name: Deploy to QA Slot
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'myfirstdotnetcoreapi'
-          slot-name: 'Production'
+          slot-name: 'qa'   # 🔥 your QA slot
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}
           package: .
-          
+
+
+# 🔹 DEPLOY TO PRODUCTION (MANUAL APPROVAL)
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: deploy-qa
+    environment: production   # 🔥 requires approval
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-app
+
+      - name: Deploy to Production
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'myfirstdotnetcoreapi'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          package: .
