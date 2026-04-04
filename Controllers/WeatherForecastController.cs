@@ -12,10 +12,12 @@ namespace WebApiTestBook.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -38,6 +40,16 @@ namespace WebApiTestBook.Controllers
             var divider = 0;
             var ret = 100 / divider;
             return Ok();
+        }
+
+        [HttpGet("appsettings")]
+        public ActionResult<Dictionary<string, string?>> GetAppSettings()
+        {
+            var values = _configuration.AsEnumerable()
+                .Where(kv => kv.Value is not null)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            return Ok(values);
         }
 
 
