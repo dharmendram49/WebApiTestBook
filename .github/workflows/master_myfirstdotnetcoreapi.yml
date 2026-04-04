@@ -53,14 +53,6 @@ jobs:
         with:
           name: app
 
-      # 🔐 Azure Login(OIDC)
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F923CE1D661F4B5C8CB6856292E7D75C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_99D4B8B10C7F456183101AFA9AA65576 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_322BF678FCA44E53959B7C5CF341F1C2 }}
-
       - name: Deploy to QA Slot
         uses: azure/webapps-deploy@v3
         with:
@@ -85,14 +77,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app
-
-      # 🔐 Azure Login (OIDC)
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F923CE1D661F4B5C8CB6856292E7D75C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_99D4B8B10C7F456183101AFA9AA65576 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_322BF678FCA44E53959B7C5CF341F1C2 }}
 
       - name: Deploy to Production
         uses: azure/webapps-deploy@v3
