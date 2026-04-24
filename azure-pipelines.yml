@@ -1,0 +1,38 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+
+# Install .NET SDK (adjust version if needed)
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+# Restore
+- script: dotnet restore
+  displayName: Restore
+
+# Build
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: Build
+
+# Run Tests
+- script: dotnet test --configuration $(buildConfiguration) --no-build --verbosity normal
+  displayName: Run Tests  
+
+# Publish (IMPORTANT - correct output)
+- script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+  displayName: Publish
+
+# Publish Artifact
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'drop'
