@@ -23,5 +23,7 @@ namespace WebApiTestBook.Models
         public string? Phone { get; set; }
 
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+        public List<Order>? Orders { get; set; }
     }
 }
